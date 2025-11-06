@@ -1,14 +1,10 @@
-import os
+from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict
-
 import pandas as pd
 import sqlalchemy
 import csv
 from utils.tables import InputTables
-from sqlalchemy.sql import text
-
-if TYPE_CHECKING:
-    from utils.config import Config
+from utils.config import Config
 
 
 class DB:
@@ -91,7 +87,7 @@ class DB:
 
         query = f"DELETE FROM {table_name}" + condition
         with self.engine.connect() as conn:
-            conn.execute(text(query))
+            conn.execute(sqlalchemy.text(query))
 
     def query(self, sql) -> pd.DataFrame:
         return pd.read_sql(sql, self.engine)
@@ -99,9 +95,9 @@ class DB:
 
 def create_db_conn(config: "Config") -> DB:
     if config.task_id is None:
-        conn = DB(os.path.join(config.output, config.project_name + ".sqlite"))
+        conn = DB(config.output / f"{config.project_name}.sqlite")
     else:
-        conn = DB(os.path.join(config.task_output, f'{config.project_name}.sqlite'))
+        conn = DB(config.task_output / f'{config.project_name}.sqlite')
     return conn
 
 
@@ -114,8 +110,8 @@ def init_project_db(config: "Config"):
         extensions = {".xlsx": pd.read_excel,
                       ".csv": pd.read_csv}
         for ext, pd_read_func in extensions.items():
-            file_path = os.path.join(config.input, table_name + ext)
-            if os.path.exists(file_path):
+            file_path = config.input / f"{table_name}{ext}"
+            if file_path.exists():
                 if ext == ".csv":
                     # Detect the separator for CSV
                     with open(file_path, 'r', encoding='utf-8') as f:

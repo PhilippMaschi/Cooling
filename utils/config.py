@@ -6,7 +6,7 @@ class Config:
     def __init__(self, project_name: str, project_path: Path):
         self.root = Path().resolve()
         self.project_name: str = project_name
-        self.project_path: Path = project_path
+        self.project_path: Path = Path(project_path) # ensure its a path variable
         self.input: Path = self.create_folder("input")
         self.output: Path = self.create_folder("output")
         self.figure: Path = self.create_folder("output/figure")

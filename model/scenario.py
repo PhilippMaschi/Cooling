@@ -1,23 +1,11 @@
 import sys
 from dataclasses import dataclass
 from typing import Optional, Dict
-
 import numpy as np
 import pandas as pd
 
-from models.operation.components import Battery
-from models.operation.components import Behavior
-from models.operation.components import Boiler
-from models.operation.components import Building
-from models.operation.components import EnergyPrice
-from models.operation.components import HeatingElement
-from models.operation.components import HotWaterTank
-from models.operation.components import PV
-from models.operation.components import Region
-from models.operation.components import SpaceCoolingTechnology
-from models.operation.components import SpaceHeatingTank
-from models.operation.components import Vehicle
-from models.operation.constants import OperationScenarioComponent
+from model.components import Battery, Behavior, Boiler, Building, EnergyPrice, HeatingElement, HotWaterTank, PV, Region, SpaceCoolingTechnology, SpaceHeatingTank, Vehicle
+from model.constants import OperationScenarioComponent
 from utils.config import Config
 from utils.tables import InputTables
 

@@ -3,7 +3,7 @@ import pyomo.environ as pyo
 from pyomo.opt import TerminationCondition
 import logging
 
-from models.operation.model_base import OperationModel
+from model.model_base import OperationModel
 
 
 class OptInstance:

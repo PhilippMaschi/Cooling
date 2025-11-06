@@ -1,4 +1,4 @@
-from models.operation import components
+from model import components
 from dataclasses import dataclass
 
 

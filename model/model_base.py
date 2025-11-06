@@ -2,7 +2,7 @@ from abc import ABC
 
 import numpy as np
 from typing import Union
-from models.operation.scenario import OperationScenario
+from model.scenario import OperationScenario
 
 
 class OperationModel(ABC):

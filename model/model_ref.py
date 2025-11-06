@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 import logging
-from models.operation.model_base import OperationModel
+from model.model_base import OperationModel
 
 
 class RefOperationModel(OperationModel):

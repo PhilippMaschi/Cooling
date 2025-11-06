@@ -5,17 +5,15 @@ import pyomo.environ as pyo
 import pandas as pd
 import numpy as np
 import logging
-
 from matplotlib import pyplot as plt
 
 from utils.db import create_db_conn
-from models.operation.constants import OperationResultVar
+from model.constants import OperationResultVar
 from utils.tables import OutputTables
 from utils.parquet import write_parquet
 
-if TYPE_CHECKING:
-    from utils.config import Config
-    from models.operation.model_base import OperationModel
+from utils.config import Config
+from model.model_base import OperationModel
 
 
 class OperationDataCollector(ABC):
