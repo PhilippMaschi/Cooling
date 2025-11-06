@@ -44,10 +44,10 @@ class OperationModel(ABC):
         self.Atot = (4.5 * self.scenario.building.Af)  # 7.2.2.2: Area of all surfaces facing the building zone
         self.Qi = self.scenario.building.internal_gains * self.scenario.building.Af
         self.Htr_w = self.scenario.building.Htr_w
-        self.Htr_ms = np.float_(9.1) * self.Am  # from 12.2.2 Equ. (64)
-        self.Htr_is = np.float_(3.45) * self.Atot
+        self.Htr_ms = np.float64(9.1) * self.Am  # from 12.2.2 Equ. (64)
+        self.Htr_is = np.float64(3.45) * self.Atot
         self.Htr_em = 1 / (1 / self.scenario.building.Hop - 1 / self.Htr_ms)  # from 12.2.2 Equ. (63)
-        self.Htr_1 = np.float_(1) / (np.float_(1) / self.scenario.building.Hve + np.float_(1) / self.Htr_is)  # Equ. C.6
+        self.Htr_1 = np.float64(1) / (np.float64(1) / self.scenario.building.Hve + np.float64(1) / self.Htr_is)  # Equ. C.6
         self.Htr_2 = self.Htr_1 + self.scenario.building.Htr_w  # Equ. C.7
         self.Htr_3 = 1 / (1 / self.Htr_2 + 1 / self.Htr_ms)  # Equ.C.8
         self.Hve = self.scenario.building.Hve

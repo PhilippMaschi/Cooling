@@ -11,7 +11,6 @@ from utils.db import create_db_conn
 from model.constants import OperationResultVar
 from utils.tables import OutputTables
 from utils.parquet import write_parquet
-
 from utils.config import Config
 from model.model_base import OperationModel
 

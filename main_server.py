@@ -1,4 +1,5 @@
 from utils.config import Config
+from utils.db import init_project_db
 from model.main import run_operation_model, run_operation_model_parallel
 import shutil
 from pathlib import Path
@@ -65,10 +66,9 @@ if __name__ == "__main__":
                 project_name=f"{country}_{year}_cooling", 
                 project_path=Path(__file__).parent / "projects" / f"{country}_{year}_cooling"
             )
-            # run_only_ref_model_and_change_indoor_set_temp_until_correct(cfg)
-
+            init_project_db(cfg)
             run_operation_model(
-                cfg=cfg,
+                config=cfg,
                 scenario_ids=[1],
                 run_ref=True,
                 run_opt=False,
@@ -79,9 +79,6 @@ if __name__ == "__main__":
             )
             pass
         
-    # save_installed_HP_capacity(country_list, years)
-    # summarize_indoor_set_temps(country_list)
-    # cfg = get_config("AUT_2030")
-    # run_flex_operation_model(cfg, task_number=1)
+
 
           

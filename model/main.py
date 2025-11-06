@@ -12,12 +12,12 @@ from joblib import delayed
 from tqdm import tqdm
 from pathlib import Path
 
-from models.operation.data_collector import OptDataCollector
-from models.operation.data_collector import RefDataCollector
-from models.operation.model_opt import OptInstance
-from models.operation.model_opt import OptOperationModel
-from models.operation.model_ref import RefOperationModel
-from models.operation.scenario import OperationScenario
+from model.data_collector import OptDataCollector
+from model.data_collector import RefDataCollector
+from model.model_opt import OptInstance
+from model.model_opt import OptOperationModel
+from model.model_ref import RefOperationModel
+from model.scenario import OperationScenario
 from utils.config import Config
 from utils.db import create_db_conn
 from utils.db import fetch_input_tables
