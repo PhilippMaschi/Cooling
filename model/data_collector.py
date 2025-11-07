@@ -176,6 +176,8 @@ class OperationDataCollector(ABC):
         result_year_df = pd.DataFrame(self.year_result, index=[0])
         result_year_df.insert(loc=0, column="ID_Scenario", value=self.scenario_id)
         result_year_df.insert(loc=1, column="TotalCost", value=self.get_total_cost())
+        result_year_df.insert(loc=2, column="PeakCoolingLoad", value=self.hour_result["Q_RoomCooling"].max())
+        result_year_df.insert(loc=3, column="PeakElectricLoad", value=self.hour_result["Load"].max())
         df_to_save = self.reduce_df_size(result_year_df)
 
         self.db.write_dataframe(
