@@ -215,8 +215,29 @@ class OperationModel(ABC):
             cooling_demand = np.zeros(shape=(8760,))
             room_temperature = np.zeros(shape=(8760,))
 
+        # Dynamic Ventilation
+        Hve_base = self.scenario.building.Hve
+        
         # RC-Model
         for t in time:  # t is the index for each time step
+            # Dynamic Ventilation Logic
+            # Check previous indoor temperature
+            if t == 0:
+                T_in_prev = thermal_start_temperature
+            else:
+                T_in_prev = room_temperature[t - 1]
+            
+            # Condition: T_outside > 27 AND T_outside < T_in_prev
+            if T_outside[t] > 27 and T_outside[t] < T_in_prev:
+                Hve_t = Hve_base * 5
+            else:
+                Hve_t = Hve_base
+            
+            # Recalculate Htr coefficients for current step
+            Htr_1_t = 1 / (1 / Hve_t + 1 / self.Htr_is)
+            Htr_2_t = Htr_1_t + self.scenario.building.Htr_w
+            Htr_3_t = 1 / (1 / Htr_2_t + 1 / self.Htr_ms)
+
             # Equ. C.2
             PHI_m = self.Am / self.Atot * (0.5 * self.Qi + Q_solar[t])
             # Equ. C.3
@@ -231,41 +252,41 @@ class OperationModel(ABC):
             PHI_mtot_0 = (
                     PHI_m
                     + self.Htr_em * T_outside[t]
-                    + self.Htr_3
+                    + Htr_3_t
                     * (
                             PHI_st
                             + self.Htr_w * T_outside[t]
-                            + self.Htr_1 * (((self.PHI_ia + 0) / self.Hve) + T_sup[t])
+                            + Htr_1_t * (((self.PHI_ia + 0) / Hve_t) + T_sup[t])
                     )
-                    / self.Htr_2
+                    / Htr_2_t
             )
 
             # Equ. C.5 with 10 W/m^2 heating power
             PHI_mtot_10 = (
                     PHI_m
                     + self.Htr_em * T_outside[t]
-                    + self.Htr_3
+                    + Htr_3_t
                     * (
                             PHI_st
                             + self.Htr_w * T_outside[t]
-                            + self.Htr_1
-                            * (((self.PHI_ia + heating_power_10) / self.Hve) + T_sup[t])
+                            + Htr_1_t
+                            * (((self.PHI_ia + heating_power_10) / Hve_t) + T_sup[t])
                     )
-                    / self.Htr_2
+                    / Htr_2_t
             )
 
             # Equ. C.5 with 10 W/m^2 cooling power
             PHI_mtot_10_c = (
                     PHI_m
                     + self.Htr_em * T_outside[t]
-                    + self.Htr_3
+                    + Htr_3_t
                     * (
                             PHI_st
                             + self.Htr_w * T_outside[t]
-                            + self.Htr_1
-                            * (((self.PHI_ia - heating_power_10) / self.Hve) + T_sup[t])
+                            + Htr_1_t
+                            * (((self.PHI_ia - heating_power_10) / Hve_t) + T_sup[t])
                     )
-                    / self.Htr_2
+                    / Htr_2_t
             )
 
             if t == 0:
@@ -275,21 +296,21 @@ class OperationModel(ABC):
 
             # Equ. C.4
             Tm_t_0 = (
-                             Tm_t_prev * (self.Cm / 3600 - 0.5 * (self.Htr_3 + self.Htr_em))
+                             Tm_t_prev * (self.Cm / 3600 - 0.5 * (Htr_3_t + self.Htr_em))
                              + PHI_mtot_0
-                     ) / (self.Cm / 3600 + 0.5 * (self.Htr_3 + self.Htr_em))
+                     ) / (self.Cm / 3600 + 0.5 * (Htr_3_t + self.Htr_em))
 
             # Equ. C.4 for 10 W/m^2 heating
             Tm_t_10 = (
-                              Tm_t_prev * (self.Cm / 3600 - 0.5 * (self.Htr_3 + self.Htr_em))
+                              Tm_t_prev * (self.Cm / 3600 - 0.5 * (Htr_3_t + self.Htr_em))
                               + PHI_mtot_10
-                      ) / (self.Cm / 3600 + 0.5 * (self.Htr_3 + self.Htr_em))
+                      ) / (self.Cm / 3600 + 0.5 * (Htr_3_t + self.Htr_em))
 
             # Equ. C.4 for 10 W/m^2 cooling
             Tm_t_10_c = (
-                                Tm_t_prev * (self.Cm / 3600 - 0.5 * (self.Htr_3 + self.Htr_em))
+                                Tm_t_prev * (self.Cm / 3600 - 0.5 * (Htr_3_t + self.Htr_em))
                                 + PHI_mtot_10_c
-                        ) / (self.Cm / 3600 + 0.5 * (self.Htr_3 + self.Htr_em))
+                        ) / (self.Cm / 3600 + 0.5 * (Htr_3_t + self.Htr_em))
 
             # Equ. C.9
             T_m_0 = (Tm_t_0 + Tm_t_prev) / 2
@@ -305,45 +326,45 @@ class OperationModel(ABC):
                             self.Htr_ms * T_m_0
                             + PHI_st
                             + self.Htr_w * T_outside[t]
-                            + self.Htr_1 * (T_sup[t] + (self.PHI_ia + 0) / self.Hve)
-                    ) / (self.Htr_ms + self.Htr_w + self.Htr_1)
+                            + Htr_1_t * (T_sup[t] + (self.PHI_ia + 0) / Hve_t)
+                    ) / (self.Htr_ms + self.Htr_w + Htr_1_t)
 
             # Euq. C.10 for 10 W/m^2 heating
             T_s_10 = (
                              self.Htr_ms * T_m_10
                              + PHI_st
                              + self.Htr_w * T_outside[t]
-                             + self.Htr_1 * (T_sup[t] + (self.PHI_ia + heating_power_10) / self.Hve)
-                     ) / (self.Htr_ms + self.Htr_w + self.Htr_1)
+                             + Htr_1_t * (T_sup[t] + (self.PHI_ia + heating_power_10) / Hve_t)
+                     ) / (self.Htr_ms + self.Htr_w + Htr_1_t)
 
             # Euq. C.10 for 10 W/m^2 cooling
             T_s_10_c = (
                                self.Htr_ms * T_m_10_c
                                + PHI_st
                                + self.Htr_w * T_outside[t]
-                               + self.Htr_1 * (T_sup[t] + (self.PHI_ia - heating_power_10) / self.Hve)
-                       ) / (self.Htr_ms + self.Htr_w + self.Htr_1)
+                               + Htr_1_t * (T_sup[t] + (self.PHI_ia - heating_power_10) / Hve_t)
+                       ) / (self.Htr_ms + self.Htr_w + Htr_1_t)
 
             # Equ. C.11
-            T_air_0 = (self.Htr_is * T_s_0 + self.Hve * T_sup[t] + self.PHI_ia + 0) / (
-                    self.Htr_is + self.Hve
+            T_air_0 = (self.Htr_is * T_s_0 + Hve_t * T_sup[t] + self.PHI_ia + 0) / (
+                    self.Htr_is + Hve_t
             )
 
             # Equ. C.11 for 10 W/m^2 heating
             T_air_10 = (
                                self.Htr_is * T_s_10
-                               + self.Hve * T_sup[t]
+                               + Hve_t * T_sup[t]
                                + self.PHI_ia
                                + heating_power_10
-                       ) / (self.Htr_is + self.Hve)
+                       ) / (self.Htr_is + Hve_t)
 
             # Equ. C.11 for 10 W/m^2 cooling
             T_air_10_c = (
                                  self.Htr_is * T_s_10_c
-                                 + self.Hve * T_sup[t]
+                                 + Hve_t * T_sup[t]
                                  + self.PHI_ia
                                  - heating_power_10
-                         ) / (self.Htr_is + self.Hve)
+                         ) / (self.Htr_is + Hve_t)
 
             # Check if air temperature without heating is in between boundaries and calculate actual HC power:
             if T_air_0 >= T_air_min[t] and T_air_0 <= T_air_max[t]:
@@ -362,26 +383,26 @@ class OperationModel(ABC):
             PHI_mtot_real = (
                     PHI_m
                     + self.Htr_em * T_outside[t]
-                    + self.Htr_3
+                    + Htr_3_t
                     * (
                             PHI_st
                             + self.Htr_w * T_outside[t]
-                            + self.Htr_1
+                            + Htr_1_t
                             * (
                                     (
                                             (self.PHI_ia + heating_demand[t] - cooling_demand[t])
-                                            / self.Hve
+                                            / Hve_t
                                     )
                                     + T_sup[t]
                             )
                     )
-                    / self.Htr_2
+                    / Htr_2_t
             )
             # Equ. C.4
             Tm_t[t] = (
-                              Tm_t_prev * (self.Cm / 3600 - 0.5 * (self.Htr_3 + self.Htr_em))
+                              Tm_t_prev * (self.Cm / 3600 - 0.5 * (Htr_3_t + self.Htr_em))
                               + PHI_mtot_real
-                      ) / (self.Cm / 3600 + 0.5 * (self.Htr_3 + self.Htr_em))
+                      ) / (self.Cm / 3600 + 0.5 * (Htr_3_t + self.Htr_em))
 
             # Equ. C.9
             T_m_real = (Tm_t[t] + Tm_t_prev) / 2
@@ -391,21 +412,21 @@ class OperationModel(ABC):
                                self.Htr_ms * T_m_real
                                + PHI_st
                                + self.Htr_w * T_outside[t]
-                               + self.Htr_1
+                               + Htr_1_t
                                * (
                                        T_sup[t]
-                                       + (self.PHI_ia + heating_demand[t] - cooling_demand[t]) / self.Hve
+                                       + (self.PHI_ia + heating_demand[t] - cooling_demand[t]) / Hve_t
                                )
-                       ) / (self.Htr_ms + self.Htr_w + self.Htr_1)
+                       ) / (self.Htr_ms + self.Htr_w + Htr_1_t)
 
             # Equ. C.11 for 10 W/m^2 heating
             room_temperature[t] = (
                                           self.Htr_is * T_s_real
-                                          + self.Hve * T_sup[t]
+                                          + Hve_t * T_sup[t]
                                           + self.PHI_ia
                                           + heating_demand[t]
                                           - cooling_demand[t]
-                                  ) / (self.Htr_is + self.Hve)
+                                  ) / (self.Htr_is + Hve_t)
 
         return heating_demand, cooling_demand, room_temperature, Tm_t
 
@@ -531,12 +552,26 @@ class OperationModel(ABC):
 
     def generate_solar_gain_rate(self):
         outside_temperature = self.scenario.region.temperature
-        shading_threshold_temperature = self.scenario.behavior.shading_threshold_temperature
-        shading_solar_reduction_rate = self.scenario.behavior.shading_solar_reduction_rate
+        # shading_threshold_temperature = self.scenario.behavior.shading_threshold_temperature
+        # shading_solar_reduction_rate = self.scenario.behavior.shading_solar_reduction_rate
+        
+        # New logic:
+        # < 27: 1.0
+        # >= 30: 0.3
+        # 27-30: Linear interpolation
+        
         solar_gain_rate = np.ones(len(outside_temperature), )
-        for i in range(0, len(outside_temperature)):
-            if outside_temperature[i] >= shading_threshold_temperature:
-                solar_gain_rate[i] = 1 - shading_solar_reduction_rate
+        
+        # Vectorized implementation
+        # Mask for >= 30
+        mask_high = outside_temperature >= 30
+        solar_gain_rate[mask_high] = 0.3
+        
+        # Mask for 27 < T < 30
+        mask_mid = (outside_temperature > 27) & (outside_temperature < 30)
+        # Interpolation: 1.0 - (0.7 / 3) * (T - 27)
+        solar_gain_rate[mask_mid] = 1.0 - (0.7 / 3) * (outside_temperature[mask_mid] - 27)
+        
         return solar_gain_rate
 
     def calculate_solar_gain(self) -> np.array:
