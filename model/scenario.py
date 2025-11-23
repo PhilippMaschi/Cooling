@@ -27,6 +27,9 @@ class OperationScenario:
     energy_price: Optional["EnergyPrice"] = None
     behavior: Optional["Behavior"] = None
     heating_element: Optional["HeatingElement"] = None
+    # Feature flags for cooling analysis
+    enable_shading: bool = True
+    enable_dynamic_ventilation: bool = True
 
     def __post_init__(self):
         self.setup_components()

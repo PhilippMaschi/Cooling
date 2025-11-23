@@ -221,16 +221,20 @@ class OperationModel(ABC):
         # RC-Model
         for t in time:  # t is the index for each time step
             # Dynamic Ventilation Logic
-            # Check previous indoor temperature
-            if t == 0:
-                T_in_prev = thermal_start_temperature
+            if self.scenario.enable_dynamic_ventilation:
+                # Check previous indoor temperature
+                if t == 0:
+                    T_in_prev = thermal_start_temperature
+                else:
+                    T_in_prev = room_temperature[t - 1]
+                
+                # Condition: T_outside > 27 AND T_outside < T_in_prev
+                if T_outside[t] > 27 and T_outside[t] < T_in_prev:
+                    Hve_t = Hve_base * 5
+                else:
+                    Hve_t = Hve_base
             else:
-                T_in_prev = room_temperature[t - 1]
-            
-            # Condition: T_outside > 27 AND T_outside < T_in_prev
-            if T_outside[t] > 27 and T_outside[t] < T_in_prev:
-                Hve_t = Hve_base * 5
-            else:
+                # Ventilation disabled - use base value
                 Hve_t = Hve_base
             
             # Recalculate Htr coefficients for current step
@@ -552,25 +556,24 @@ class OperationModel(ABC):
 
     def generate_solar_gain_rate(self):
         outside_temperature = self.scenario.region.temperature
-        # shading_threshold_temperature = self.scenario.behavior.shading_threshold_temperature
-        # shading_solar_reduction_rate = self.scenario.behavior.shading_solar_reduction_rate
-        
-        # New logic:
-        # < 27: 1.0
-        # >= 30: 0.3
-        # 27-30: Linear interpolation
-        
         solar_gain_rate = np.ones(len(outside_temperature), )
         
-        # Vectorized implementation
-        # Mask for >= 30
-        mask_high = outside_temperature >= 30
-        solar_gain_rate[mask_high] = 0.3
-        
-        # Mask for 27 < T < 30
-        mask_mid = (outside_temperature > 27) & (outside_temperature < 30)
-        # Interpolation: 1.0 - (0.7 / 3) * (T - 27)
-        solar_gain_rate[mask_mid] = 1.0 - (0.7 / 3) * (outside_temperature[mask_mid] - 27)
+        # Check if shading is enabled
+        if self.scenario.enable_shading:
+            # New logic:
+            # < 27: 1.0
+            # >= 30: 0.3
+            # 27-30: Linear interpolation
+            
+            # Vectorized implementation
+            # Mask for >= 30
+            mask_high = outside_temperature >= 30
+            solar_gain_rate[mask_high] = 0.3
+            
+            # Mask for 27 < T < 30
+            mask_mid = (outside_temperature > 27) & (outside_temperature < 30)
+            # Interpolation: 1.0 - (0.7 / 3) * (T - 27)
+            solar_gain_rate[mask_mid] = 1.0 - (0.7 / 3) * (outside_temperature[mask_mid] - 27)
         
         return solar_gain_rate
 
