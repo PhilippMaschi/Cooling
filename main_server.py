@@ -69,7 +69,7 @@ if __name__ == "__main__":
             init_project_db(cfg)
             run_operation_model(
                 config=cfg,
-                scenario_ids=[1,2,3],
+                scenario_ids=[1,2,3,4,5,6,7,8,9,10],
                 run_ref=True,
                 run_opt=False,
                 save_year=True,

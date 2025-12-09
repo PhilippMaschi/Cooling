@@ -4,7 +4,7 @@ import numpy as np
 
 from utils.config import Config
 from utils.parquet import read_parquet
-from utils.plotter import Plotter
+from visualization.plotter import Plotter
 
 
 def household_load_balance(config: "Config", scenario_ids: List[int], models: Optional[List[str]] = None):
