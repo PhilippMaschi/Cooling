@@ -229,7 +229,7 @@ class OperationModel(ABC):
                     T_in_prev = room_temperature[t - 1]
                 
                 # Condition: T_outside > 27 AND T_outside < T_in_prev
-                if T_outside[t] > 27 and T_outside[t] < T_in_prev:
+                if room_temperature[t] > 27 and T_outside[t] < room_temperature:
                     Hve_t = Hve_base * 5
                 else:
                     Hve_t = Hve_base
